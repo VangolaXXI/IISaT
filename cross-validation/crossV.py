@@ -1,21 +1,32 @@
-from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.datasets import load_breast_cancer
+import numpy as np
 
-# Загрузка данных
+# Загрузка датасета Iris
 data = load_breast_cancer()
 X = data.data
 y = data.target
 
-# Создание объекта классификатора kNN
-knn = KNeighborsClassifier(n_neighbors=5)  # Выберите количество соседей
+# Список значений k для kNN
+k_values = list(range(1,11))
 
-# Выполнение кросс-валидации с использованием 5 фолдов и оценка по точности
-scores = cross_val_score(knn, X, y, cv=10, scoring='accuracy')# Для полноты (Recall)
+# Пустые списки для хранения результатов кросс-валидации
+accuracy_scores = []
 
-# Вывод результатов кросс-валидации
-print("Точность для каждого фолда:")
-for i, score in enumerate(scores):
-    print(f"Фолд {i+1}: {score}")
+# Выполнение кросс-валидации для каждого значения k
+for k in k_values:
+    # Создание классификатора kNN
+    knn = KNeighborsClassifier(n_neighbors=k)
+    # Выполнение кросс-валидации с 5 фолдами и оценка качества
+    scores = cross_val_score(knn, X, y, cv=5, scoring='accuracy')
+    # Сохранение средней точности для данного значения k
+    accuracy_scores.append(np.mean(scores))
 
-print("Средняя точность: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+# Вывод результатов
+for k, accuracy in zip(k_values, accuracy_scores):
+    print(f"Значение k: {k}, Средняя точность: {accuracy}")
+
+# Выбор оптимального значения k
+optimal_k = k_values[np.argmax(accuracy_scores)]
+print(f"\nОптимальное значение k: {optimal_k}")
