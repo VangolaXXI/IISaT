@@ -1,35 +1,53 @@
-from data_generation import generate_synthetic_data, train_test_split
-from class_balancing import balance_classes
-from models import LogisticRegression, KNearestNeighbors
-from evaluation_metrics import accuracy, precision, recall, f1_score
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
-# Генерация данных
-X, y = generate_synthetic_data()
+# Загрузка датасета breast cancer
+data = load_breast_cancer()
+X = data.data
+y = data.target
 
-# Разделение данных
-X_train, X_test, y_train, y_test = train_test_split(X, y)
+# Разделение данных на обучающий и тестовый наборы
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Балансировка классов
-X_train_balanced, y_train_balanced = balance_classes(X_train, y_train)
+# Стандартизация данных
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
 
-# Обучение и оценка модели логистической регрессии
-model_lr = LogisticRegression()
-model_lr.fit(X_train_balanced, y_train_balanced)
-y_pred_lr = model_lr.predict(X_test)
+# Обучение метода k ближайших соседей
+knn_model = KNeighborsClassifier(n_neighbors=5)
+knn_model.fit(X_train_scaled, y_train)
+y_pred_knn = knn_model.predict(X_test_scaled)
 
-# Обучение и оценка модели метода k ближайших соседей
-model_knn = KNearestNeighbors(k=3)
-y_pred_knn = model_knn.predict(X_test, X_train_balanced, y_train_balanced)
+# Считаем метрики качества для kNN
+accuracy_knn = round(accuracy_score(y_test, y_pred_knn), 4)
+precision_knn = round(precision_score(y_test, y_pred_knn), 4)
+recall_knn = round(recall_score(y_test, y_pred_knn), 4)
+f1_knn = round(f1_score(y_test, y_pred_knn), 4)
 
-# Оценка качества моделей
-print("Логистическая регрессия:")
-print("Accuracy:", accuracy(y_test, y_pred_lr))
-print("Precision:", precision(y_test, y_pred_lr))
-print("Recall:", recall(y_test, y_pred_lr))
-print("F1 Score:", f1_score(y_test, y_pred_lr))
+print("Метод k ближайших соседей:")
+print(f"Accuracy: {accuracy_knn}")
+print(f"Precision: {precision_knn}")
+print(f"Recall: {recall_knn}")
+print(f"F1 Score: {f1_knn}")
 
-print(f"\nМетод k ближайших соседей (k={model_knn.k}):")
-print("Accuracy:", accuracy(y_test, y_pred_knn))
-print("Precision:", precision(y_test, y_pred_knn))
-print("Recall:", recall(y_test, y_pred_knn))
-print("F1 Score:", f1_score(y_test, y_pred_knn))
+# Обучение логистической регрессии
+lr_model = LogisticRegression(max_iter=1000)
+lr_model.fit(X_train_scaled, y_train)
+y_pred_lr = lr_model.predict(X_test_scaled)
+
+# Считаем метрики качества для логистической регрессии
+accuracy_lr = round(accuracy_score(y_test, y_pred_lr), 4)
+precision_lr = round(precision_score(y_test, y_pred_lr), 4)
+recall_lr = round(recall_score(y_test, y_pred_lr), 4)
+f1_lr = round(f1_score(y_test, y_pred_lr), 4)
+
+print("\nЛогистическая регрессия:")
+print(f"Accuracy: {accuracy_lr}")
+print(f"Precision: {precision_lr}")
+print(f"Recall: {recall_lr}")
+print(f"F1 Score: {f1_lr}")
